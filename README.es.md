@@ -17,7 +17,7 @@ Vamos a crear el Diagrama de relación de entidad para la base de datos de Insta
 
 
 ## 💻 Instalación
-
+  
 1. Entra dentro del environment (entorno) `$ pipenv shell`
 
 2. Instala todas las dependencias `$ pipenv install`
