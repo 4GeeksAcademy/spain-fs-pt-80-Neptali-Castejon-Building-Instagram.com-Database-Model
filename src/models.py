@@ -1,6 +1,6 @@
 import os
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Enum
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy import create_engine
 from eralchemy2 import render_er
@@ -14,7 +14,6 @@ class Users(Base):
     username = Column(String(250), nullable=False)
     lastname = Column(String(250), nullable=False)
     email = Column(String, nullable=False, unique=True)
-    password = Column(String, nullable=False)
 
     def serialize(self):
         return {
@@ -25,43 +24,41 @@ class Users(Base):
             "email": self.email
         }
 
-class Posts(Base):
-    __tablename__ = 'posts'
+class Followers(Base):
+    __tablename__ = 'followers'
     id = Column(Integer, primary_key=True)
-    title = Column(String, nullable=False)
-    content = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship('Users', backref='posts')
+    user_from_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_to_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    user_from = relationship('Users', foreign_keys=[user_from_id], backref='following')
+    user_to = relationship('Users', foreign_keys=[user_to_id], backref='followers')
 
 class Comments(Base):
     __tablename__ = 'comments'
     id = Column(Integer, primary_key=True)
-    content = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    author_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('Users', backref='comments')
     post_id = Column(Integer, ForeignKey('posts.id'))
     post = relationship('Posts', backref='comments')
+    comment_text = Column(String, nullable=False)
 
     def serialize(self):
         return {
             "id": self.id,
-            "content": self.content
+            "comment_text": self.comment_text
         }
+    
+class Posts(Base):
+    __tablename__ = 'posts'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
 
 class Medias(Base):
     __tablename__ = 'medias'
     id = Column(Integer, primary_key=True)
-    src = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    type = Column(Enum('image', 'video', 'audio', name='media_types'), nullable=False)
     post_id = Column(Integer, ForeignKey('posts.id'))
     post = relationship('Posts', backref='medias')
-
-class Followers(Base):
-    __tablename__ = 'followers'
-    id = Column(Integer, primary_key=True)
-    from_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    to_user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    from_user = relationship('Users', foreign_keys=[from_user_id], backref='following')
-    to_user = relationship('Users', foreign_keys=[to_user_id], backref='followers')
 
 # Draw from SQLAlchemy base
 try:
